@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Varta</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <style>
+        body, html {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: #101010;
+            color: #e0e0e0;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        .header {
+            background-color: #1c1c1c;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #2a2a2a;
+        }
+        .header h1 {
+            font-size: 20px;
+            margin: 0;
+            color: #ffffff;
+        }
+        .new-chat {
+            background-color: #2a2a2a;
+            color: #ffffff;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+        .new-chat:hover {
+            color: #ffa500;
+        }
+        #chat-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            max-width: 90%;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            line-height: 1.5;
+            display: flex;
+            align-items: flex-start;
+        }
+        .user-message {
+            align-self: flex-end;
+            background-color: #2a2a2a;
+            color: #ffffff;
+        }
+        .bot-message {
+            align-self: flex-start;
+            background-color: #1c1c1c;
+            color: #e0e0e0;
+            border: 1px solid #2a2a2a;
+        }
+        .message-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background-size: cover;
+            background-position: center;
+            flex-shrink: 0;
+        }
+        .message-content {
+            flex-grow: 1;
+        }
+        .input-area {
+            background-color: #1c1c1c;
+            border-top: 1px solid #2a2a2a;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .input-container {
+            width: 50%;
+            display: flex;
+            position: relative;
+        }
+        #user-input {
+            flex-grow: 1;
+            padding: 12px;
+            padding-right: 40px;
+            border: 1px solid #2a2a2a;
+            border-radius: 10px;
+            font-size: 16px;
+            background-color: #101010;
+            color: #e0e0e0;
+        }
+        #user-input::placeholder {
+            color: #808080;
+        }
+        #user-input:focus {
+            outline: none;
+            border-color: #ffa500;
+        }
+        #user-input:focus::placeholder {
+            color: transparent;
+        }
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        #user-input:focus::after {
+            content: '|';
+            color: #ffa500;
+            animation: blink 1s step-end infinite;
+        }
+        #send-button {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 20px;
+            transition: color 0.3s ease;
+        }
+        #send-button:hover {
+            color: #ffa500;
+        }
+        .loading-icon {
+            width: 30px;
+            height: 30px;
+            background-image: url('/static/images/loading_icon.gif');
+            background-size: cover;
+            background-position: center;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Varta</h1>
+            <button class="new-chat">New Chat</button>
+        </div>
+        <div id="chat-container"></div>
+        <div class="input-area">
+            <div class="input-container">
+                <input type="text" id="user-input" placeholder="Ask anything...">
+                <button id="send-button"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            let sessionId = Date.now().toString();
+
+            function addMessage(sender, message, isLoading = false) {
+                let messageClass = sender === 'You' ? 'user-message' : 'bot-message';
+                let iconPath = sender === 'You' ? '/static/images/user-icon.png' : '/static/images/varta-icon.png';
+                let iconHtml = isLoading ? 
+                    '<div class="loading-icon"></div>' : 
+                    `<div class="message-icon" style="background-image: url('${iconPath}')"></div>`;
+                
+                let messageHtml = `
+                    <div class="message ${messageClass}" id="${isLoading ? 'loading-message' : ''}">
+                        ${iconHtml}
+                        <div class="message-content">
+                            <strong>${sender}:</strong> ${message}
+                        </div>
+                    </div>
+                `;
+                
+                $('#chat-container').append(messageHtml);
+                $('#chat-container').scrollTop($('#chat-container')[0].scrollHeight);
+                
+                return $('#loading-message');
+            }
+
+            function updateLoadingMessage(message) {
+                let vartaIconHtml = `<div class="message-icon" style="background-image: url('/static/images/varta-icon.png')"></div>`;
+                $('#loading-message').find('.loading-icon').replaceWith(vartaIconHtml);
+                $('#loading-message').find('.message-content').html(`<strong>Varta:</strong> ${message}`);
+                $('#loading-message').removeAttr('id');
+            }
+
+            $('#send-button').click(function() {
+                let question = $('#user-input').val();
+                if (question.trim() === '') return;
+
+                addMessage('You', question);
+                $('#user-input').val('');
+                
+                let loadingMessage = addMessage('Varta', 'Thinking...', true);
+
+                $.ajax({
+                    url: '/ask',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({question: question, session_id: sessionId}),
+                    success: function(response) {
+                        updateLoadingMessage(response.answer);
+                    },
+                    error: function() {
+                        updateLoadingMessage('An error occurred. Please try again.');
+                    }
+                });
+            });
+
+            $('#user-input').keypress(function(e) {
+                if (e.which == 13) {
+                    $('#send-button').click();
+                }
+            });
+
+            $('.new-chat').click(function() {
+                sessionId = Date.now().toString();
+                $('#chat-container').empty();
+            });
+        });
+    </script>
+</body>
+</html>

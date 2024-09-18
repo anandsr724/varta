@@ -1,0 +1,15 @@
+chroma-hnswlib==0.7.3
+chromadb==0.5.3
+Flask==3.0.3
+groq==0.11.0
+# grpcio==1.66.1
+# grpcio-status==1.62.3
+langchain==0.3.0
+# langchain-chroma==0.1.4
+langchain-community==0.3.0
+# langchain-google-genai==2.0.0
+langchain-groq==0.2.0
+# langchain-ollama==0.2.0
+# langchain-text-splitters==0.2.4
+numpy==1.26.4
+pandas==2.2.2
